@@ -1,2 +1,2 @@
 # fedorapostinstall
-this is a post install script for fedora 
+this is a post install script for fedora
