@@ -23,7 +23,7 @@ if [ ! -f "/usr/bin/shellcheck" ]; then
         ;;
     O | o | *)
         echo -e "${vert}installation de ShellCheck ${neutre}"
-        sudo dnf install -y shellcheck
+        sudo dnf install -y ShellCheck
         ;;
     esac
 else
@@ -51,9 +51,10 @@ else
     echo "le script continue la vérification et l'installation des programmes"
 fi
 
-if [ ! -f "/usr/bin/keepassxc"];    then
+if [ ! -f "/usr/bin/keepassxc" ];  then
     echo -e "${vert}tu veux installer Keepassxc? ${neutre}"
-    read -r $keepassxc  in
+    read -r "$keepassxc"
+    case $keepassxc   in  
     N | n)
         echo "KeepassXC ne sera pas installé, honte à toi"
         echo "le script continue la vérification et l'installation des programmes"
