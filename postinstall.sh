@@ -68,3 +68,26 @@ else
     echo -e "${rouge}KeepassXC est déjà installé, la force est déjà en toi ...${neutre}"
     echo "Le script continue la vérification et l'installation des programmes"
 fi
+
+if [ ! -f "/etc/yum.repos.d/kernel-vanilla.repo" ];  then
+    echo -e "${jaune}ont install le kernel Vanilla ?${neutre}"
+    read -r vanilla
+    case $vanilla in
+    N | n)
+        echo "Vanilla ne sera pas installé, tu ne sera pas en avance sur ton temps jeune padawan "
+        echo "le script continue la vérification et l'installation des programmes"
+        ;;
+    O | o |*)
+        echo -e "${bleu}j'installe le Vanilla kernel, tu sera en avance sur ton temps.${neutre}"
+        curl -s https://repos.fedorapeople.org/repos/thl/kernel-vanilla.repo | sudo tee /etc/yum.repos.d/kernel-vanilla.repo
+        sudo dnf config-manager --set-enabled kernel-vanilla-mainline
+        sudo dnf config-manager --save --setopt="kernel-vanilla-mainline.priority=99"
+        sudo dnf upgrade kernel kernel-core kernel-modules kernel-modules-extra --refresh
+        echo -e "${rouge}Un Reboot est requis pour utiliser le nouveau Kernel ${neutre}" 
+       
+        ;;
+    esac
+else
+    echo -e "${rouge}Vanilla est déjà présent, tu es un avant-gardiste  ${neutre}"
+    echo "le script continue la vérification et l'installation des programmes"
+fi
