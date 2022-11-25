@@ -19,6 +19,9 @@ sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-rele
 echo -e "${jaune}Installation du depot RPMfusion Non-Free ${neutre}"
 sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
+#installation de shfmt pour mettre en forme les scripts bash.
+
+sudo dnf install shfmt -y 
 
 if [ ! -f "/usr/bin/shellcheck" ]; then
     echo -e "${vert}ShellCheck n'est pas installé voulez-vous l'installer?${neutre}[O/n]"
@@ -38,7 +41,7 @@ else
     echo "le script continue la vérification et l'installation des programmes"
 fi
 
-if [ ! -f "/usr/bin/codium" ];  then
+if [ ! -f "/usr/bin/codium" ]; then
     echo -e "${bleu}ont install vscodium ?${neutre}"
     read -r codium
     case $codium in
@@ -46,7 +49,7 @@ if [ ! -f "/usr/bin/codium" ];  then
         echo "VSCodium ne sera pas installé, tu ne sera pas un programmeur jeune padawan"
         echo "le script continue la vérification et l'installation des programmes"
         ;;
-    O | o |*)
+    O | o | *)
         echo -e "${jaune}j'installe VSCodium, tu sera un programmeur OpenSource Luke"
         sudo rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg
         printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" | sudo tee -a /etc/yum.repos.d/vscodium.repo
@@ -58,15 +61,15 @@ else
     echo "le script continue la vérification et l'installation des programmes"
 fi
 
-if [ ! -f "/usr/bin/keepassxc" ];  then
+if [ ! -f "/usr/bin/keepassxc" ]; then
     echo -e "${vert}tu veux installer Keepassxc? ${neutre}"
     read -r "$keepassxc"
-    case $keepassxc   in  
+    case $keepassxc in
     N | n)
         echo "KeepassXC ne sera pas installé, honte à toi"
         echo "le script continue la vérification et l'installation des programmes"
         ;;
-    O | o |*)
+    O | o | *)
         echo -e "${bleu}Installation de KeepassXC,la force Luke ${neutre}"
         sudo dnf install keepassxc -y
         ;;
@@ -76,7 +79,7 @@ else
     echo "Le script continue la vérification et l'installation des programmes"
 fi
 
-if [ ! -f "/etc/yum.repos.d/kernel-vanilla.repo" ];  then
+if [ ! -f "/etc/yum.repos.d/kernel-vanilla.repo" ]; then
     echo -e "${jaune}ont install le kernel Vanilla ?${neutre}"
     read -r vanilla
     case $vanilla in
@@ -84,14 +87,14 @@ if [ ! -f "/etc/yum.repos.d/kernel-vanilla.repo" ];  then
         echo "Vanilla ne sera pas installé, tu ne sera pas en avance sur ton temps jeune padawan "
         echo "le script continue la vérification et l'installation des programmes"
         ;;
-    O | o |*)
+    O | o | *)
         echo -e "${bleu}j'installe le Vanilla kernel, tu sera en avance sur ton temps.${neutre}"
         curl -s https://repos.fedorapeople.org/repos/thl/kernel-vanilla.repo | sudo tee /etc/yum.repos.d/kernel-vanilla.repo
         sudo dnf config-manager --set-enabled kernel-vanilla-mainline
         sudo dnf config-manager --save --setopt="kernel-vanilla-mainline.priority=99"
         sudo dnf upgrade kernel kernel-core kernel-modules kernel-modules-extra --refresh
-        echo -e "${rouge}Un Reboot est requis pour utiliser le nouveau Kernel ${neutre}" 
-       
+        echo -e "${rouge}Un Reboot est requis pour utiliser le nouveau Kernel ${neutre}"
+
         ;;
     esac
 else
@@ -99,15 +102,15 @@ else
     echo "le script continue la vérification et l'installation des programmes"
 fi
 
-if [ ! -f "/usr/lib64/discord" ];   then
+if [ ! -f "/usr/lib64/discord" ]; then
     echo -e "${jaune}Veux-tu installer Discord? ${neutre}"
     read -r "$discord"
-    case $discord   in
-    N |n)
+    case $discord in
+    N | n)
         echo "Discord ne sera pas installé"
         echo "le script continue la vérification et l'installation des programmes"
         ;;
-    O | o |*)
+    O | o | *)
         echo -e "${bleu}Installation de Discord, Profite pour rejoindre le serveur de l'APDM ;-)${neutre}"
         sudo dnf install discord -y
         ;;
