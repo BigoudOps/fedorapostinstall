@@ -11,7 +11,14 @@ if [ "$UID" -eq "0" ]; then
 fi
 
 echo -e "${vert}mise à jour des dépots ${neutre}"
-sudo dnf upgrade -y
+sudo dnf upgrade --refresh -y
+
+echo -e "${bleu}Installation du depot RPMfusion Free ${neutre}"
+sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+
+echo -e "${jaune}Installation du depot RPMfusion Non-Free ${neutre}"
+sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
 
 if [ ! -f "/usr/bin/shellcheck" ]; then
     echo -e "${vert}ShellCheck n'est pas installé voulez-vous l'installer?${neutre}[O/n]"
@@ -90,4 +97,22 @@ if [ ! -f "/etc/yum.repos.d/kernel-vanilla.repo" ];  then
 else
     echo -e "${rouge}Vanilla est déjà présent, tu es un avant-gardiste  ${neutre}"
     echo "le script continue la vérification et l'installation des programmes"
+fi
+
+if [ ! -f "/usr/lib64/discord" ];   then
+    echo -e "${jaune}Veux-tu installer Discord? ${neutre}"
+    read -r "$discord"
+    case $discord   in
+    N |n)
+        echo "Discord ne sera pas installé"
+        echo "le script continue la vérification et l'installation des programmes"
+        ;;
+    O | o |*)
+        echo -e "${bleu}Installation de Discord, Profite pour rejoindre le serveur de l'APDM ;-)${neutre}"
+        sudo dnf install discord -y
+        ;;
+    esac
+else
+    echo -e "${rouge}Discord est déja installé, As-tu déja rejoins l'APDM ?"
+    echo "Le script continue la vérification et l'installation des programmes"
 fi
