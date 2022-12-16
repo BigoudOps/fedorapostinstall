@@ -63,7 +63,7 @@ fi
 
 if [ ! -f "/usr/bin/keepassxc" ]; then
     echo -e "${vert}tu veux installer Keepassxc? ${neutre}"
-    read -r "$keepassxc"
+    read -r $keepassxc
     case $keepassxc in
     N | n)
         echo "KeepassXC ne sera pas installé, honte à toi"
