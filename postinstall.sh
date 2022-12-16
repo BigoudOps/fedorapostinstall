@@ -104,7 +104,7 @@ fi
 
 if [ ! -f "/usr/lib64/discord" ]; then
     echo -e "${jaune}Veux-tu installer Discord? ${neutre}"
-    read -r "$discord"
+    read -r $discord
     case $discord in
     N | n)
         echo "Discord ne sera pas installé"
