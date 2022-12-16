@@ -63,7 +63,7 @@ fi
 
 if [ ! -f "/usr/bin/keepassxc" ]; then
     echo -e "${vert}tu veux installer Keepassxc? ${neutre}"
-    read -r $keepassxc
+    read -r keepassxc
     case $keepassxc in
     N | n)
         echo "KeepassXC ne sera pas installé, honte à toi"
@@ -104,7 +104,7 @@ fi
 
 if [ ! -f "/usr/lib64/discord" ]; then
     echo -e "${jaune}Veux-tu installer Discord? ${neutre}"
-    read -r $discord
+    read -r discord
     case $discord in
     N | n)
         echo "Discord ne sera pas installé"
