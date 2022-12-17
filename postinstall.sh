@@ -19,9 +19,12 @@ sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-rele
 echo -e "${jaune}Installation du depot RPMfusion Non-Free ${neutre}"
 sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
+echo -e "${vert}Installation du depot Non-free tainted ${neutre}"
+sudo dnf install rpmfusion-nonfree-release-tainted
+
 #installation de shfmt pour mettre en forme les scripts bash.
 
-sudo dnf install shfmt -y 
+sudo dnf install shfmt -y
 
 if [ ! -f "/usr/bin/shellcheck" ]; then
     echo -e "${vert}ShellCheck n'est pas installé voulez-vous l'installer?${neutre}[O/n]"
@@ -63,7 +66,7 @@ fi
 
 if [ ! -f "/usr/bin/keepassxc" ]; then
     echo -e "${vert}tu veux installer Keepassxc? ${neutre}"
-    read -r "$keepassxc"
+    read -r keepassxc
     case $keepassxc in
     N | n)
         echo "KeepassXC ne sera pas installé, honte à toi"
@@ -104,7 +107,7 @@ fi
 
 if [ ! -f "/usr/lib64/discord" ]; then
     echo -e "${jaune}Veux-tu installer Discord? ${neutre}"
-    read -r "$discord"
+    read -r discord
     case $discord in
     N | n)
         echo "Discord ne sera pas installé"
@@ -117,5 +120,22 @@ if [ ! -f "/usr/lib64/discord" ]; then
     esac
 else
     echo -e "${rouge}Discord est déja installé, As-tu déja rejoins l'APDM ?"
+    echo "Le script continue la vérification et l'installation des programmes"
+fi
+if [ ! -f "/usr/bin/nitrokey-app" ]; then
+    echo -e "${vert}Tu veux installer Nitrokey ?${neutre}"
+    read -r nitrokey
+    case $nitrokey in
+    N | n)
+        echo "Nitrokey ne sera pas installé tampis pour la sécurité de toute façons c'est surcoté ^^"
+        echo "le script continue la vérification et l'installation des programmes"
+        ;;
+    O | o | *)
+        echo -e "${jaune}Installation de Nitrokey-app${neutre}"
+        sudo dnf install nitrokey-app -y
+        ;;
+    esac
+else
+    echo -e "${rouge}Nitrokey-app est déja installé, As-tu déja créer ta clé gnupg ?"
     echo "Le script continue la vérification et l'installation des programmes"
 fi
