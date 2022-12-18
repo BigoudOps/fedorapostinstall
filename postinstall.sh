@@ -10,7 +10,7 @@ if [ "$UID" -eq "0" ]; then
     exit
 fi
 
-echo -e "${vert}mise à jour des dépots ${neutre}"
+echo -e "${vert}mise à jour des dépôts ${neutre}"
 sudo dnf upgrade --refresh -y
 
 echo -e "${bleu}Installation du depot RPMfusion Free ${neutre}"
@@ -40,7 +40,7 @@ if [ ! -f "/usr/bin/shellcheck" ]; then
         ;;
     esac
 else
-    echo -e "${rouge}ShellCheck est déja installé ${neutre}"
+    echo -e "${rouge}ShellCheck est déjà installé ${neutre}"
     echo "le script continue la vérification et l'installation des programmes"
 fi
 
@@ -119,7 +119,7 @@ if [ ! -f "/usr/lib64/discord" ]; then
         ;;
     esac
 else
-    echo -e "${rouge}Discord est déja installé, As-tu déja rejoins l'APDM ?"
+    echo -e "${rouge}Discord est déjà installé, As-tu déjà rejoins l'APDM ?"
     echo "Le script continue la vérification et l'installation des programmes"
 fi
 if [ ! -f "/usr/bin/nitrokey-app" ]; then
@@ -136,6 +136,24 @@ if [ ! -f "/usr/bin/nitrokey-app" ]; then
         ;;
     esac
 else
-    echo -e "${rouge}Nitrokey-app est déja installé, As-tu déja créer ta clé gnupg ?"
+    echo -e "${rouge}Nitrokey-app est déjà installé, As-tu déjà créer ta clé gnupg ?${neutre}"
+    echo "Le script continue la vérification et l'installation des programmes"
+fi
+
+if [ ! -f "/usr/bin/audacity" ]; then
+    echo -e "${vert}Tu veux installer Audacity-freeworld ?${neutre}"
+    read -r auda
+    case $auda in
+    N | n)
+        echo "Audacity ne sera pas installé tampis pour la création de podcast"
+        echo "le script continue la vérification et l'installation des programmes"
+        ;;
+    O | o | *)
+        echo -e "${jaune}Installation d' Audacity-freeworld${neutre}"
+        sudo dnf install audacity-freeworld -y
+        ;;
+    esac
+else
+    echo -e "${rouge}Audacity est déjà installé, As-tu déjà configurer tes entrées ?${neutre}"
     echo "Le script continue la vérification et l'installation des programmes"
 fi
