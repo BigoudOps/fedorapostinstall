@@ -182,4 +182,17 @@ else
   ok "Audacity est déjà installé. As-tu configuré tes entrées ?"
 fi
 
+if ! have_cmd joplin; then
+  if ask_yes_no "Souhaites-tu installer Joplin (version Desktop officielle) ?"; then
+    info "Installation de Joplin via le script officiel"
+    sudo dnf install -y curl nodejs npm # dépendances nécessaires
+    curl -s https://raw.githubusercontent.com/laurent22/joplin/dev/Joplin_install_and_update.sh | bash
+    ok "Joplin installé ! Lance-le avec la commande 'joplin' ou depuis ton menu Applications."
+  else
+    warn "Joplin ne sera pas installé, dommage pour tes notes !"
+  fi
+else
+  ok "Joplin est déjà installé, ton savoir est bien gardé."
+fi
+
 ok "Tout est terminé. Que la Force soit avec toi !"
