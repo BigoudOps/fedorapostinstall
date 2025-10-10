@@ -1,159 +1,185 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+
 rouge='\e[1;31m'
-neutre='\e[0;m'
-vert='\e[4;32m'
+neutre='\e[0m'
+vert='\e[1;32m'
 bleu='\e[1;34m'
 jaune='\e[1;33m'
 
-if [ "$UID" -eq "0" ]; then
-    echo -e "${rouge}lance le sans sudo, le mot de passe sera demandé dans le terminal lors de la 1ère action nécessitant le droit administrateur.${vert}"
-    exit
-fi
 
-echo -e "${vert}mise à jour des dépôts ${neutre}"
-sudo dnf upgrade --refresh -y
+say() { echo -e "$*${neutre}"; }
+ok()  { say "${vert}$*"; }
+info(){ say "${bleu}$*"; }
+warn(){ say "${jaune}$*"; }
+err() { say "${rouge}$*"; }
 
-echo -e "${bleu}Installation du depot RPMfusion Free ${neutre}"
-sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+ask_yes_no() {
+  
+  local reply
+  read -r -p "$(echo -e "${jaune}$1 [O/n] ${neutre}")" reply || true
+  case "${reply:-O}" in
+    [Nn]*) return 1 ;;
+    *)     return 0 ;;
+  esac
+}
 
-echo -e "${jaune}Installation du depot RPMfusion Non-Free ${neutre}"
-sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
-echo -e "${vert}Installation du depot Non-free tainted ${neutre}"
-sudo dnf install rpmfusion-nonfree-release-tainted
+require_not_root() {
+  if [ "${UID}" -eq 0 ]; then
+    err "Lance le **sans sudo**, le mot de passe sera demandé pour les actions admin."
+    exit 1
+  fi
+}
 
-#installation de shfmt pour mettre en forme les scripts bash.
+dnf_install() {
+  
+  local pkg="$1"
+  if rpm -q --quiet "$pkg"; then
+    ok "$pkg est déjà installé."
+  else
+    info "Installation de $pkg…"
+    sudo dnf install -y "$pkg"
+  fi
+}
 
-sudo dnf install shfmt -y
 
-if [ ! -f "/usr/bin/shellcheck" ]; then
-    echo -e "${vert}ShellCheck n'est pas installé voulez-vous l'installer?${neutre}[O/n]"
-    read -r shell
-    case $shell in
-    N | n)
-        echo "ShellCheck ne sera pas installé"
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${vert}installation de ShellCheck ${neutre}"
-        sudo dnf install -y ShellCheck
-        ;;
-    esac
+require_not_root
+
+ok "Mise à jour des dépôts"
+sudo dnf -y upgrade --refresh
+
+
+dnf_install dnf-plugins-core
+dnf_install curl
+
+
+
+fedora_ver="$(rpm -E %fedora)"
+if ! rpm -q --quiet "rpmfusion-free-release" ; then
+  info "Installation du dépôt RPM Fusion Free"
+  sudo dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${fedora_ver}.noarch.rpm"
 else
-    echo -e "${rouge}ShellCheck est déjà installé ${neutre}"
-    echo "le script continue la vérification et l'installation des programmes"
+  ok "RPM Fusion Free déjà installé."
 fi
 
-if [ ! -f "/usr/bin/codium" ]; then
-    echo -e "${bleu}ont install vscodium ?${neutre}"
-    read -r codium
-    case $codium in
-    N | n)
-        echo "VSCodium ne sera pas installé, tu ne sera pas un programmeur jeune padawan"
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${jaune}j'installe VSCodium, tu sera un programmeur OpenSource Luke"
-        sudo rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg
-        printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" | sudo tee -a /etc/yum.repos.d/vscodium.repo
-        sudo dnf install codium -y
-        ;;
-    esac
+if ! rpm -q --quiet "rpmfusion-nonfree-release" ; then
+  warn "Installation du dépôt RPM Fusion Non-Free"
+  sudo dnf install -y "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${fedora_ver}.noarch.rpm"
 else
-    echo -e "${rouge}VSCodium est déjà installé, tu es un grand monsieur ${neutre}"
-    echo "le script continue la vérification et l'installation des programmes"
+  ok "RPM Fusion Non-Free déjà installé."
 fi
 
-if [ ! -f "/usr/bin/keepassxc" ]; then
-    echo -e "${vert}tu veux installer Keepassxc? ${neutre}"
-    read -r keepassxc
-    case $keepassxc in
-    N | n)
-        echo "KeepassXC ne sera pas installé, honte à toi"
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${bleu}Installation de KeepassXC,la force Luke ${neutre}"
-        sudo dnf install keepassxc -y
-        ;;
-    esac
+
+if ! rpm -q --quiet rpmfusion-nonfree-release-tainted ; then
+  info "Activation du dépôt Non-Free tainted"
+  sudo dnf install -y rpmfusion-nonfree-release-tainted
 else
-    echo -e "${rouge}KeepassXC est déjà installé, la force est déjà en toi ...${neutre}"
-    echo "Le script continue la vérification et l'installation des programmes"
+  ok "Non-Free tainted déjà présent."
 fi
+
+
+dnf_install shfmt
+
+if ! have_cmd shellcheck; then
+  if ask_yes_no "ShellCheck n'est pas installé. Voulez-vous l'installer ?"; then
+    info "Installation de ShellCheck"
+    dnf_install ShellCheck
+  else
+    warn "ShellCheck ne sera pas installé. Le script continue."
+  fi
+else
+  ok "ShellCheck est déjà installé."
+fi
+
+
+if ! have_cmd codium; then
+  if ask_yes_no "On installe VSCodium ?"; then
+    info "Ajout du dépôt VSCodium"
+    sudo rpmkeys --import "https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg"
+    sudo tee /etc/yum.repos.d/vscodium.repo >/dev/null <<'EOF'
+[gitlab.com_paulcarroty_vscodium_repo]
+name=download.vscodium.com
+baseurl=https://download.vscodium.com/rpms/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg
+metadata_expire=1h
+EOF
+    dnf_install codium
+    ok "VSCodium installé. Tu seras un programmeur OpenSource, Luke."
+  else
+    warn "VSCodium ne sera pas installé. Le script continue."
+  fi
+else
+  ok "VSCodium est déjà installé, tu es un grand monsieur."
+fi
+
+
+if ! have_cmd keepassxc; then
+  if ask_yes_no "Tu veux installer KeePassXC ?"; then
+    dnf_install keepassxc
+  else
+    warn "KeepassXC ne sera pas installé. Le script continue."
+  fi
+else
+  ok "KeepassXC est déjà installé."
+fi
+
 
 if [ ! -f "/etc/yum.repos.d/kernel-vanilla.repo" ]; then
-    echo -e "${jaune}ont install le kernel Vanilla ?${neutre}"
-    read -r vanilla
-    case $vanilla in
-    N | n)
-        echo "Vanilla ne sera pas installé, tu ne sera pas en avance sur ton temps jeune padawan "
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${bleu}j'installe le Vanilla kernel, tu sera en avance sur ton temps.${neutre}"
-        curl -s https://repos.fedorapeople.org/repos/thl/kernel-vanilla.repo | sudo tee /etc/yum.repos.d/kernel-vanilla.repo
-        sudo dnf config-manager --set-enabled kernel-vanilla-mainline
-        sudo dnf config-manager --save --setopt="kernel-vanilla-mainline.priority=99"
-        sudo dnf upgrade kernel kernel-core kernel-modules kernel-modules-extra --refresh
-        echo -e "${rouge}Un Reboot est requis pour utiliser le nouveau Kernel ${neutre}"
-
-        ;;
-    esac
+  if ask_yes_no "On installe le kernel Vanilla (mainline) ?"; then
+    info "Activation du repo kernel-vanilla"
+    curl -fsSL https://repos.fedorapeople.org/repos/thl/kernel-vanilla.repo | sudo tee /etc/yum.repos.d/kernel-vanilla.repo >/dev/null
+    sudo dnf config-manager --set-enabled kernel-vanilla-mainline
+    # Priorité pour que le mainline l'emporte
+    sudo dnf config-manager --save --setopt="kernel-vanilla-mainline.priority=99"
+    info "Mise à niveau du noyau vers Vanilla mainline"
+    sudo dnf upgrade -y kernel kernel-core kernel-modules kernel-modules-extra --refresh || true
+    warn "Un redémarrage est requis pour utiliser le nouveau kernel."
+  else
+    warn "Vanilla ne sera pas installé. Le script continue."
+  fi
 else
-    echo -e "${rouge}Vanilla est déjà présent, tu es un avant-gardiste  ${neutre}"
-    echo "le script continue la vérification et l'installation des programmes"
+  ok "Kernel Vanilla déjà présent, avant-gardiste !"
 fi
 
-if [ ! -f "/usr/lib64/discord" ]; then
-    echo -e "${jaune}Veux-tu installer Discord? ${neutre}"
-    read -r discord
-    case $discord in
-    N | n)
-        echo "Discord ne sera pas installé"
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${bleu}Installation de Discord, Profite pour rejoindre le serveur de l'APDM ;-)${neutre}"
-        sudo dnf install discord -y
-        ;;
-    esac
+
+if ! have_cmd discord; then
+  if ask_yes_no "Veux-tu installer Discord ?"; then
+    dnf_install discord
+    ok "Discord installé : profite pour rejoindre l'APDM ;-)"
+  else
+    warn "Discord ne sera pas installé. Le script continue."
+  fi
 else
-    echo -e "${rouge}Discord est déjà installé, As-tu déjà rejoins l'APDM ?"
-    echo "Le script continue la vérification et l'installation des programmes"
-fi
-if [ ! -f "/usr/bin/nitrokey-app" ]; then
-    echo -e "${vert}Tu veux installer Nitrokey ?${neutre}"
-    read -r nitrokey
-    case $nitrokey in
-    N | n)
-        echo "Nitrokey ne sera pas installé tampis pour la sécurité de toute façons c'est surcoté ^^"
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${jaune}Installation de Nitrokey-app${neutre}"
-        sudo dnf install nitrokey-app -y
-        ;;
-    esac
-else
-    echo -e "${rouge}Nitrokey-app est déjà installé, As-tu déjà créer ta clé gnupg ?${neutre}"
-    echo "Le script continue la vérification et l'installation des programmes"
+  ok "Discord est déjà installé. As-tu rejoint l'APDM ?"
 fi
 
-if [ ! -f "/usr/bin/audacity" ]; then
-    echo -e "${vert}Tu veux installer Audacity-freeworld ?${neutre}"
-    read -r auda
-    case $auda in
-    N | n)
-        echo "Audacity ne sera pas installé tampis pour la création de podcast"
-        echo "le script continue la vérification et l'installation des programmes"
-        ;;
-    O | o | *)
-        echo -e "${jaune}Installation d' Audacity-freeworld${neutre}"
-        sudo dnf install audacity-freeworld -y
-        ;;
-    esac
+
+if ! have_cmd nitrokey-app; then
+  if ask_yes_no "Tu veux installer Nitrokey App ?"; then
+    dnf_install nitrokey-app
+  else
+    warn "Nitrokey ne sera pas installé, tant pis pour la sécu (surcotée ? ^^)."
+  fi
 else
-    echo -e "${rouge}Audacity est déjà installé, As-tu déjà configurer tes entrées ?${neutre}"
-    echo "Le script continue la vérification et l'installation des programmes"
+  ok "Nitrokey-app est déjà installé. As-tu déjà créé ta clé GnuPG ?"
 fi
+
+
+if ! have_cmd audacity; then
+  if ask_yes_no "Tu veux installer Audacity-freeworld ?"; then
+    dnf_install audacity-freeworld
+  else
+    warn "Audacity ne sera pas installé, dommage pour le podcast."
+  fi
+else
+  ok "Audacity est déjà installé. As-tu configuré tes entrées ?"
+fi
+
+ok "Tout est terminé. Que la Force soit avec toi !"
